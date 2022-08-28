@@ -4,6 +4,8 @@ import {
   useSignatureDrop,
   useNetwork,
   useNetworkMismatch,
+  ConnectWallet,
+ 
 } from "@thirdweb-dev/react";
 
 import {
@@ -12,11 +14,11 @@ import {
 } from "@thirdweb-dev/sdk";
 import type { NextPage } from "next";
 import styles from "../styles/Home.module.css";
+import { useState } from "react";
 
- // default to 1
-   // default to 1
 
 const Home: NextPage = () => {
+   const [quantity, setQuantity] = useState(1); // default to 1
   const address = useAddress();
   const connectWithMetamask = useMetamask();
   const isMismatch = useNetworkMismatch();
@@ -38,7 +40,7 @@ const Home: NextPage = () => {
     }
 
     try {
-      const tx = await signatureDrop?.claimTo(address, 1);
+      const tx = await signatureDrop?.claimTo(address, quantity);
       alert(`Succesfully minted NFT!`);
     } catch (error: any) {
       alert(error?.message);
@@ -52,7 +54,7 @@ const Home: NextPage = () => {
     }
 
     if (isMismatch) {
-      switchNetwork && switchNetwork(ChainId.Goerli);
+      switchNetwork && switchNetwork(ChainId.BinanceSmartChainMainnet);
       return;
     }
 
@@ -108,6 +110,29 @@ const Home: NextPage = () => {
       {address ? (
         <div className={styles.nftBoxGrid}>
           {/* Mint a new NFT */}
+          <p>Quantity</p>
+                <div className={styles.quantityContainer}>
+                  <button
+                    className={`${styles.quantityControlButton}`}
+                    onClick={() => setQuantity(quantity - 1)}
+                    disabled={quantity <= 1}
+                  >
+                    -
+                  </button>
+
+                  <h4>{quantity}</h4>
+
+                  <button
+                    className={`${styles.quantityControlButton}`}
+                    onClick={() => setQuantity(quantity + 1)}
+                    disabled={
+                      quantity >= 10
+                      
+                    }
+                  >
+                    +
+                  </button>
+                </div> 
           <div
             className={styles.optionSelectBox}
             role="button"      
@@ -115,11 +140,7 @@ const Home: NextPage = () => {
           >
             
 
-            <img
-              src={`/icons/drop.webp`}
-              alt="drop"
-              className={styles.cardImg}
-            />
+            
             <h2 className={styles.selectBoxTitle}>Claim NFT</h2>
             <p className={styles.selectBoxDescription}>
               Use the normal <code>claim</code> function to mint an NFT under
@@ -145,16 +166,13 @@ const Home: NextPage = () => {
             </p>
           </div>
         </div>
-      ) : (
-        <button
-          className={styles.mainButton}
-          onClick={() => connectWithMetamask()}
-        >
-          Connect Wallet
-        </button>
-      )}
-    </div>
-  );
+      ) : <p>Please Connect Wallet Below</p>} <div className={styles.margintop}><ConnectWallet 
+  // Some customization of the button style
+  colorMode="light"
+        accentColor="#F213A4"
+        
+/></div> 
+    </div> )  
 };
 
 export default Home;

@@ -1,8 +1,18 @@
-import '../styles/globals.css'
-import type { AppProps } from 'next/app'
+import type { AppProps } from "next/app";
+import { ChainId, ThirdwebProvider } from "@thirdweb-dev/react";
+import "../styles/globals.css";
+
+
+// This is the chainId your dApp will work on.
+const activeChainId = ChainId.BinanceSmartChainMainnet;
 
 function MyApp({ Component, pageProps }: AppProps) {
-  return <Component {...pageProps} />
+  return (
+    <ThirdwebProvider desiredChainId={activeChainId}>
+      <Component {...pageProps} />
+      
+    </ThirdwebProvider>
+  );
 }
 
-export default MyApp
+export default MyApp;

@@ -1,86 +1,160 @@
-import type { NextPage } from 'next'
-import Head from 'next/head'
-import Image from 'next/image'
+import {
+  useAddress,
+  useMetamask,
+  useSignatureDrop,
+  useNetwork,
+  useNetworkMismatch,
+} from "@thirdweb-dev/react";
+
+import {
+  ChainId,
+  SignedPayload721WithQuantitySignature,
+} from "@thirdweb-dev/sdk";
+import type { NextPage } from "next";
+import styles from "../styles/Home.module.css";
+
+ // default to 1
+   // default to 1
 
 const Home: NextPage = () => {
+  const address = useAddress();
+  const connectWithMetamask = useMetamask();
+  const isMismatch = useNetworkMismatch();
+  const [, switchNetwork] = useNetwork();
+
+  const signatureDrop = useSignatureDrop(
+    "0xE62d775E3Cc91659034dFC3b09a46259D6942c2c"
+  );
+
+  async function claim() {
+    if (!address) {
+      connectWithMetamask();
+      return;
+    }
+
+    if (isMismatch) {
+      switchNetwork?.(ChainId.BinanceSmartChainMainnet);
+      return;
+    }
+
+    try {
+      const tx = await signatureDrop?.claimTo(address, 1);
+      alert(`Succesfully minted NFT!`);
+    } catch (error: any) {
+      alert(error?.message);
+    }
+  }
+
+  async function claimWithSignature() {
+    if (!address) {
+      connectWithMetamask();
+      return;
+    }
+
+    if (isMismatch) {
+      switchNetwork && switchNetwork(ChainId.Goerli);
+      return;
+    }
+
+    const signedPayloadReq = await fetch(`/api/generate-mint-signature`, {
+      method: "POST",
+      body: JSON.stringify({
+        address: address,
+      }),
+    });
+
+    console.log(signedPayloadReq);
+
+    if (signedPayloadReq.status === 400) {
+      alert(
+        "Looks like you don't own an early access NFT :( You don't qualify for the free mint."
+      );
+      return;
+    } else {
+      try {
+        const signedPayload =
+          (await signedPayloadReq.json()) as SignedPayload721WithQuantitySignature;
+
+        console.log(signedPayload);
+
+        const nft = await signatureDrop?.signature.mint(signedPayload);
+
+        alert(`Succesfully minted NFT!`);
+      } catch (error: any) {
+        alert(error?.message);
+      }
+    }
+  }
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-2">
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+   
+    <div className={styles.container}>
+      {/* Top Section */}
+      <h1 className={styles.h1}>Signature Drop</h1>
 
-      <main className="flex w-full flex-1 flex-col items-center justify-center px-20 text-center">
-        <h1 className="text-6xl font-bold">
-          Welcome to{' '}
-          <a className="text-blue-600" href="https://nextjs.org">
-            Next.js!
-          </a>
-        </h1>
-
-        <p className="mt-3 text-2xl">
-          Get started by editing{' '}
-          <code className="rounded-md bg-gray-100 p-3 font-mono text-lg">
-            pages/index.tsx
-          </code>
-        </p>
-
-        <div className="mt-6 flex max-w-4xl flex-wrap items-center justify-around sm:w-full">
-          <a
-            href="https://nextjs.org/docs"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Documentation &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Find in-depth information about Next.js features and its API.
-            </p>
-          </a>
-
-          <a
-            href="https://nextjs.org/learn"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Learn &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Learn about Next.js in an interactive course with quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Examples &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Discover and deploy boilerplate example Next.js projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Deploy &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className="flex h-24 w-full items-center justify-center border-t">
-        <a
-          className="flex items-center justify-center gap-2"
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
+      <p className={styles.describe}>
+        In this example, users who own one of our{" "}
+        <a href="https://opensea.io/collection/thirdweb-community">
+          Early Access NFTs
+        </a>{" "}
+        can mint for free using the{" "}
+        <a href="https://portal.thirdweb.com/pre-built-contracts/signature-drop#signature-minting">
+          Signature Mint
         </a>
-      </footer>
-    </div>
-  )
-}
+        . However, for those who don&apos;t own an Early Access NFT, they can
+        still claim using the regular claim function.
+      </p>
 
-export default Home
+      {address ? (
+        <div className={styles.nftBoxGrid}>
+          {/* Mint a new NFT */}
+          <div
+            className={styles.optionSelectBox}
+            role="button"      
+            onClick={() => claim()}
+          >
+            
+
+            <img
+              src={`/icons/drop.webp`}
+              alt="drop"
+              className={styles.cardImg}
+            />
+            <h2 className={styles.selectBoxTitle}>Claim NFT</h2>
+            <p className={styles.selectBoxDescription}>
+              Use the normal <code>claim</code> function to mint an NFT under
+              the conditions of the claim phase.
+            </p>
+          </div>
+
+          <div
+            className={styles.optionSelectBox}
+            role="button"
+            
+            onClick={() => claimWithSignature()}
+          >
+            <img
+              src={`/icons/analytics.png`}
+              alt="signature-mint"
+              className={styles.cardImg}
+            />
+            <h2 className={styles.selectBoxTitle}>Mint with Signature</h2>
+            <p className={styles.selectBoxDescription}>
+              Check if you are eligible to mint an NFT for free, by using
+              signature-based minting.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <button
+          className={styles.mainButton}
+          onClick={() => connectWithMetamask()}
+        >
+          Connect Wallet
+        </button>
+      )}
+    </div>
+  );
+};
+
+export default Home;

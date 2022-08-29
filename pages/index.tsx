@@ -62,6 +62,7 @@ const Home: NextPage = () => {
       method: "POST",
       body: JSON.stringify({
         address: address,
+        quantity: quantity,
       }),
     });
 

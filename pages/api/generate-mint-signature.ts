@@ -3,11 +3,12 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 export default async function generateMintSignature(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
+
 ) {
   // De-construct body from request
   const { address } = JSON.parse(req.body);
-
+const { quantity } = JSON.parse(req.body);
   // Get the Early Access NFT Edition Drop contract
   const polygonSDK = new ThirdwebSDK("polygon");
   const earlyAccessNfts = polygonSDK.getEditionDrop(
@@ -38,17 +39,19 @@ export default async function generateMintSignature(
   );
 0x18CF4335
   // If the user has an early access NFT, generate a mint signature
-  if (userHasToken) {
-    const mintSignature = await signatureDrop.signature.generate({
-      to: address, // Can only be minted by the address we checked earlier
-      price: "0", // Free!
-      mintStartTime: new Date(0), // now
-    });
-
+  if (userHasToken && quantity >= 3) {
+   const mintSignature = await signatureDrop.signature.generate({
+     to: address, // Can only be minted by the address we checked earlier
+     quantity: quantity,
+    price: '1', 
+    mintStartTime: new Date(0), // now
+  })
     res.status(200).json(mintSignature);
   } else {
     res.status(400).json({
       message: "User does not have an early access NFT",
     });
   }
-}
+} 
+
+

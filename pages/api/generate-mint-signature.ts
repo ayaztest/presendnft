@@ -37,13 +37,14 @@ const { quantity } = JSON.parse(req.body);
   const signatureDrop = BinanceSmartChainMainnetSDK.getSignatureDrop(
     "0xE62d775E3Cc91659034dFC3b09a46259D6942c2c"
   );
-0x18CF4335
+
   // If the user has an early access NFT, generate a mint signature
-  if (userHasToken && quantity >= 3) {
+  if (userHasToken ) {
    const mintSignature = await signatureDrop.signature.generate({
      to: address, // Can only be minted by the address we checked earlier
      quantity: quantity,
-    price: '1', 
+     price: parseInt(quantity) < 3 ? "3" : "1", 
+    currencyAddress: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
     mintStartTime: new Date(0), // now
   })
     res.status(200).json(mintSignature);
